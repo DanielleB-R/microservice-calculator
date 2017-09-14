@@ -1,0 +1,18 @@
+{
+  "name": "result-tracker",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MPL-2.0",
+  "dependencies": {
+    "ioredis": "^3.1.4",
+    "lodash.flow": "^3.5.0",
+    "micro": "^9.0.0"
+  },
+  "devDependencies": {
+    "micro-dev": "^1.2.3"
+  },
+  "scripts": {
+    "start": "micro -p 3214",
+    "dev": "micro-dev -p 3214"
+  }
+}
