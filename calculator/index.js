@@ -1,5 +1,6 @@
 const fetch = require('node-fetch')
-const {createError, text} = require('micro')
+const {createError, text, send} = require('micro')
+const uuid = require('uuid/v4')
 
 const pipe = (...fns) => (x) => (
   fns.reduce(
@@ -41,4 +42,38 @@ const callExternal = (port) => async (tokens) => {
 const callInfix = callExternal(3211)
 const callRpn = callExternal(3210)
 
-module.exports = pipe(text, callTokenize, callInfix, callRpn)
+const beginCalculation = (id) => (
+  fetch('http://localhost:3214', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({id, state: 'pending'})
+  })
+    .then(async (response) => {
+      if (!response.ok) {
+        throw createError(response.status, await response.text)
+      }
+      return response
+    })
+)
+
+const endCalculation = (id) => async (result) => (
+  fetch('http://localhost:3214', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({id, state: 'complete', result})
+  })
+    .catch((err) => console.log(err))
+    .then(() => result)
+)
+
+module.exports = async (req, res) => {
+  const expr = await text(req)
+  const calculationId = uuid()
+  await beginCalculation(calculationId)
+  pipe(callTokenize, callInfix, callRpn, endCalculation(calculationId))(expr)
+  send(res, 200, {id: calculationId})
+}
