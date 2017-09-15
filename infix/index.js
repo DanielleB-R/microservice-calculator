@@ -1,4 +1,3 @@
-const fetch = require('node-fetch')
 const NRP = require('node-redis-pubsub')
 const eventNames = require('../event-names')
 
@@ -74,37 +73,9 @@ const convertInfix = (tokens) => {
   return exhaustStack(finalStack, finalOutput)
 }
 
-const callExternal = (port) => async (tokens) => {
-  const response = await fetch(`http://localhost:${port}`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(tokens)
-  })
-  if (!response.ok) {
-    throw createError(response.status, await response.text())
-  }
-
-  return response.json()
-}
-
-const callRpn = callExternal(3210)
-
-const endCalculation = (id) => async (result) => (
-  nrp.emit(eventNames.calculationCompleted, {id, result})
-)
-
-const pipe = (...fns) => (x) => (
-  fns.reduce(
-    (prev, f) => prev.then(f),
-    Promise.resolve(x)
-  )
-)
-
 nrp.on(eventNames.infixTokensAvailable, ({id, tokens}) => {
   const rpnTokens = convertInfix(tokens)
-  pipe(callRpn, endCalculation(id))(rpnTokens)
+  nrp.emit(eventNames.rpnTokensCalculated, {id, tokens: rpnTokens})
 })
 
-module.exports = async (req) => convertInfix(await json(req))
+module.exports = () => 'OK'

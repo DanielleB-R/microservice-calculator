@@ -1,6 +1,14 @@
+const NRP = require('node-redis-pubsub')
+const eventNames = require('../event-names')
+
 const isNumber = require('lodash.isnumber')
 const {createError, json} = require('micro')
 const {Stack} = require('immutable')
+
+const nrp = new NRP({
+  port: 6379,
+  scope: 'calculator'
+})
 
 const binaryOperators = {
   '+': (op1, op2) => op2 + op1,
@@ -36,5 +44,10 @@ const evaluateRpn = (tokens) => {
 
   return finalStack.peek()
 }
+
+nrp.on(eventNames.rpnTokensCalculated, ({id, tokens}) => {
+  const result = evaluateRpn(tokens)
+  nrp.emit(eventNames.calculationCompleted, {id, result})
+})
 
 module.exports = async (req) => evaluateRpn(await json(req))
