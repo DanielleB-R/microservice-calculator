@@ -6,7 +6,8 @@
   "dependencies": {
     "ioredis": "^3.1.4",
     "lodash.flow": "^3.5.0",
-    "micro": "^9.0.0"
+    "micro": "^9.0.0",
+    "node-redis-pubsub": "^1.0.3"
   },
   "devDependencies": {
     "micro-dev": "^1.2.3"

@@ -2,10 +2,26 @@ const Redis = require('ioredis')
 const {createError, json} = require('micro')
 const url = require('url')
 const flow = require('lodash.flow')
+const NRP = require('node-redis-pubsub')
+const eventNames = require('../event-names')
 
 const redis = new Redis()
 const STATE_HASH = 'calculation.state'
 const RESULT_HASH = 'calculation.result'
+
+const nrp = new NRP({
+  port: 6379,
+  scope: 'calculator'
+})
+
+nrp.on(eventNames.calculationReceived, async ({id}) => {
+  await redis.hset(STATE_HASH, id, 'pending')
+})
+
+nrp.on(eventNames.calculationCompleted, async ({id, result}) => {
+  await redis.hset(STATE_HASH, id, 'complete')
+  await redis.hset(RESULT_HASH, id, result)
+})
 
 const getCalculationId = (req) => url.parse(req.url, true).query.id || null
 const retrieveCalculation = async (id) => {
@@ -30,13 +46,15 @@ const updateCalculation = async (jsonPromise) => {
   if (!('id' in body)) {
     throw createError(400, 'Id Required')
   }
-  if (body.state) {
-    await redis.hset(STATE_HASH, body.id, body.state)
+  if (body.state === 'complete') {
+    nrp.emit(eventNames.calculationCompleted, {id: body.id, result: body.result})
+    return {id: body.id}
   }
-  if (body.result) {
-    await redis.hset(RESULT_HASH, body.id, body.result)
+  if (body.state === 'pending') {
+    nrp.emit(eventNames.calculationReceived, {id: body.id})
+    return {id: body.id}
   }
-  return {id: body.id}
+  throw createError(400, 'Unknown State')
 }
 
 const methodHandlers = {
