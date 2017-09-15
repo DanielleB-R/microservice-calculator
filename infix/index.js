@@ -74,8 +74,12 @@ const convertInfix = (tokens) => {
 }
 
 nrp.on(eventNames.infixTokensAvailable, ({id, tokens}) => {
-  const rpnTokens = convertInfix(tokens)
-  nrp.emit(eventNames.rpnTokensCalculated, {id, tokens: rpnTokens})
+  try {
+    const rpnTokens = convertInfix(tokens)
+    nrp.emit(eventNames.rpnTokensCalculated, {id, tokens: rpnTokens})
+  } catch (err) {
+    nrp.emit(eventNames.calculationErrored, {id, message: err.message})
+  }
 })
 
 module.exports = () => 'OK'

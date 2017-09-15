@@ -41,8 +41,12 @@ const tokenize = (expression) => {
 }
 
 nrp.on(eventNames.calculationReceived, ({id, expr}) => {
-  const tokens = tokenize(expr)
-  nrp.emit(eventNames.infixTokensAvailable, {id, tokens})
+  try {
+    const tokens = tokenize(expr)
+    nrp.emit(eventNames.infixTokensAvailable, {id, tokens})
+  } catch (err) {
+    nrp.emit(eventNames.calculationErrored, {id, message: err.message})
+  }
 })
 
 module.exports = () => 'OK'

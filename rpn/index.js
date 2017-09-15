@@ -46,8 +46,12 @@ const evaluateRpn = (tokens) => {
 }
 
 nrp.on(eventNames.rpnTokensCalculated, ({id, tokens}) => {
-  const result = evaluateRpn(tokens)
-  nrp.emit(eventNames.calculationCompleted, {id, result})
+  try {
+    const result = evaluateRpn(tokens)
+    nrp.emit(eventNames.calculationCompleted, {id, result})
+  } catch (err) {
+    nrp.emit(eventNames.calculationErrored, {id, message: err.message})
+  }
 })
 
-module.exports = async (req) => evaluateRpn(await json(req))
+module.exports = () => 'OK'
