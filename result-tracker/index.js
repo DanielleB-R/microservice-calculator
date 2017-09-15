@@ -8,6 +8,7 @@ const eventNames = require('../event-names')
 const redis = new Redis()
 const STATE_HASH = 'calculation.state'
 const RESULT_HASH = 'calculation.result'
+const MESSAGE_HASH = 'calculation.message'
 
 const nrp = new NRP({
   port: 6379,
@@ -21,6 +22,11 @@ nrp.on(eventNames.calculationReceived, async ({id}) => {
 nrp.on(eventNames.calculationCompleted, async ({id, result}) => {
   await redis.hset(STATE_HASH, id, 'complete')
   await redis.hset(RESULT_HASH, id, result)
+})
+
+nrp.on(eventNames.calculationErrored, async ({id, message}) => {
+  await redis.hset(STATE_HASH, id, 'error')
+  await redis.hset(MESSAGE_HASH, id, message)
 })
 
 const getCalculationId = (req) => url.parse(req.url, true).query.id || null
