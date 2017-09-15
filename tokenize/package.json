@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "immutable": "^3.8.1",
+    "lodash.cond": "^4.5.2",
     "micro": "^9.0.0",
     "node-redis-pubsub": "^1.0.3"
   },

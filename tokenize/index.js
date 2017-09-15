@@ -2,7 +2,8 @@ const NRP = require('node-redis-pubsub')
 const eventNames = require('../event-names')
 
 const {List} = require('immutable')
-const {createError, text} = require('micro')
+const {createError} = require('micro')
+const cond = require('lodash.cond')
 
 const nrp = new NRP({
   port: 6379,
@@ -19,23 +20,33 @@ const pushIntIfNecessary = (tokens, inProgress) => {
     : tokens
 }
 
-const tokenize = (expression) => {
-  const [tokens, inProgress] = Array.from(expression).reduce(([tokens, inProgress], c) => {
-    if (whitespaceChars.includes(c)) {
-      return [tokens, inProgress]
-    }
-    if (operatorChars.includes(c)) {
-      return [
-        pushIntIfNecessary(tokens, inProgress).push(c),
-        ''
-      ]
-    }
-    if (numericChars.includes(c)) {
-      return [tokens, inProgress + c]
-    }
+const charIn = (str) => (c) => str.includes(c)
 
-    throw createError(400, `Character ${c} not a valid part of an arithmetic expression`)
-  }, [List(), ''])
+const tokenize = (expression) => {
+  const [tokens, inProgress] = Array.from(expression).reduce(([tokens, inProgress], c) => (
+    cond([
+      [
+        charIn(whitespaceChars),
+        () => [tokens, inProgress]
+      ],
+      [
+        charIn(operatorChars),
+        () => [pushIntIfNecessary(tokens, inProgress).push(c), '']
+      ],
+      [
+        charIn(numericChars),
+        () => [tokens, inProgress + c]
+      ],
+      [
+        () => true,
+        () => {
+          throw new Error(
+            `Character ${c} not a valid part of an arithmetic expression`
+          )
+        }
+      ]
+    ])(c)
+  ), [List(), ''])
 
   return pushIntIfNecessary(tokens, inProgress)
 }
