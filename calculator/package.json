@@ -7,6 +7,7 @@
   "dependencies": {
     "micro": "^9.0.0",
     "node-fetch": "^1.7.3",
+    "node-redis-pubsub": "^1.0.3",
     "uuid": "^3.1.0"
   },
   "devDependencies": {

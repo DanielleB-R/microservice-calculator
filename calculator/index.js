@@ -1,6 +1,13 @@
 const fetch = require('node-fetch')
 const {createError, text, send} = require('micro')
 const uuid = require('uuid/v4')
+const NRP = require('node-redis-pubsub')
+const eventNames = require('../event-names')
+
+const nrp = new NRP({
+  port: 6379,
+  scope: 'calculator'
+})
 
 const pipe = (...fns) => (x) => (
   fns.reduce(
@@ -43,31 +50,11 @@ const callInfix = callExternal(3211)
 const callRpn = callExternal(3210)
 
 const beginCalculation = (id) => (
-  fetch('http://localhost:3214', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({id, state: 'pending'})
-  })
-    .then(async (response) => {
-      if (!response.ok) {
-        throw createError(response.status, await response.text)
-      }
-      return response
-    })
+  nrp.emit(eventNames.calculationReceived, {id})
 )
 
 const endCalculation = (id) => async (result) => (
-  fetch('http://localhost:3214', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({id, state: 'complete', result})
-  })
-    .catch((err) => console.log(err))
-    .then(() => result)
+  nrp.emit(eventNames.calculationCompleted, {id, result})
 )
 
 module.exports = async (req, res) => {
