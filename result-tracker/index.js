@@ -41,24 +41,7 @@ const retrieveCalculation = async (id) => {
   return {state, result}
 }
 
-const updateCalculation = async (jsonPromise) => {
-  const body = await jsonPromise
-  if (!('id' in body)) {
-    throw createError(400, 'Id Required')
-  }
-  if (body.state === 'complete') {
-    nrp.emit(eventNames.calculationCompleted, {id: body.id, result: body.result})
-    return {id: body.id}
-  }
-  if (body.state === 'pending') {
-    nrp.emit(eventNames.calculationReceived, {id: body.id})
-    return {id: body.id}
-  }
-  throw createError(400, 'Unknown State')
-}
-
 const methodHandlers = {
-  POST: flow([json, updateCalculation]),
   GET: flow([getCalculationId, retrieveCalculation])
 }
 
