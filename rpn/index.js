@@ -27,7 +27,7 @@ const evaluateRpn = (tokens) => {
     }
 
     if (token in binaryOperators) {
-      if (stack.length < 2) {
+      if (stack.size < 2) {
         throw createError(400, 'Stack underflow')
       }
       const [op1, st1] = pop(stack)
