@@ -4,6 +4,7 @@ const eventNames = require('../event-names')
 const {Stack, List} = require('immutable')
 const isNumber = require('lodash.isnumber')
 const {json, createError} = require('micro')
+const cond = require('lodash.cond')
 
 const nrp = new NRP({
   port: 6379,
@@ -27,10 +28,9 @@ const transferBracketOperators = (stack, output) => {
   }
 
   const [operator, st1] = pop(stack)
-  if (operator === '(') {
-    return [st1, output]
-  }
-  return transferBracketOperators(st1, output.push(operator))
+  return operator === '('
+    ? [st1, output]
+    : transferBracketOperators(st1, output.push(operator))
 }
 
 const resolvePrecedence = (operator, stack, output) => {
@@ -50,25 +50,22 @@ const resolvePrecedence = (operator, stack, output) => {
 }
 
 const exhaustStack = (stack, output) => {
-  if (stack.size <= 0) {
-    return output
-  }
-  return exhaustStack(stack.pop(), output.push(stack.peek()))
+  return stack.size > 0
+    ? exhaustStack(stack.pop(), output.push(stack.peek()))
+    : output
 }
 
+const equals = (target) => (value) => value === target
+
 const convertInfix = (tokens) => {
-  const [finalStack, finalOutput] = tokens.reduce(([stack, output], token) => {
-    if (isNumber(token)) {
-      return [stack, output.push(token)]
-    }
-    if (token === '(') {
-      return [stack.push(token), output]
-    }
-    if (token === ')') {
-      return transferBracketOperators(stack, output)
-    }
-    return resolvePrecedence(token, stack, output)
-  }, [Stack(), List()])
+  const [finalStack, finalOutput] = tokens.reduce(([stack, output], token) => (
+    cond([
+      [isNumber, (token) => [stack, output.push(token)]],
+      [equals('('), (token) => [stack.push(token), output]],
+      [equals(')'), () => transferBracketOperators(stack, output)],
+      [() => true, (token) => resolvePrecedence(token, stack, output)]
+    ])(token)
+  ), [Stack(), List()])
 
   return exhaustStack(finalStack, finalOutput)
 }
