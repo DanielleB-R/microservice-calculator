@@ -6,7 +6,9 @@
   "dependencies": {
     "immutable": "^3.8.1",
     "lodash.isnumber": "^3.0.3",
-    "micro": "^9.0.0"
+    "micro": "^9.0.0",
+    "node-fetch": "^1.7.3",
+    "node-redis-pubsub": "^1.0.3"
   },
   "devDependencies": {
     "micro-dev": "^1.2.3"
