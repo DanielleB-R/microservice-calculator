@@ -7,7 +7,7 @@ import {
   SQSEvent,
 } from "aws-lambda";
 import { getDocument, putDocument } from "./dynamo";
-import { ResultMessageSchema } from "./message";
+import { ResultMessageSchema, sendResultMessage } from "./message";
 import { evaluateRpn } from "./rpn";
 import { tokenizeRpn } from "./tokenize";
 import { v4 as uuidv4 } from "uuid";
@@ -52,7 +52,7 @@ export const entry: APIGatewayProxyHandlerV2<Output> = async (
         expression: body.expression,
         result,
       };
-      await putDocument(document);
+      await sendResultMessage(document);
 
       return document;
     }
