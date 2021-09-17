@@ -1,0 +1,36 @@
+{
+  "name": "microservice-calculator",
+  "version": "1.0.0",
+  "description": "An experiment in microservices on AWS Lambda, using SQS and Typescript.",
+  "scripts": {
+    "build": "tsc",
+    "lint": "eslint . --ext .ts",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DanielleB-R/microservice-calculator.git"
+  },
+  "author": "Danielle Brook-Roberge",
+  "license": "MPL-2.0",
+  "bugs": {
+    "url": "https://github.com/DanielleB-R/microservice-calculator/issues"
+  },
+  "homepage": "https://github.com/DanielleB-R/microservice-calculator#readme",
+  "dependencies": {
+    "myzod": "^1.8.5",
+    "uuid": "^8.3.2"
+  },
+  "devDependencies": {
+    "@types/node": "^16.9.2",
+    "@typescript-eslint/eslint-plugin": "^4.31.1",
+    "@typescript-eslint/parser": "^4.31.1",
+    "aws-sdk": "^2.990.0",
+    "eslint": "^7.32.0",
+    "prettier": "^2.4.1",
+    "typescript": "^4.4.3"
+  },
+  "peerDependencies": {
+    "aws-sdk": "^2.990.0"
+  }
+}
