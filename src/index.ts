@@ -1,4 +1,9 @@
-import { APIGatewayProxyHandlerV2, APIGatewayProxyEventV2 } from "aws-lambda";
+import {
+  APIGatewayProxyHandlerV2,
+  APIGatewayProxyEventV2,
+  APIGatewayProxyStructuredResultV2,
+  APIGatewayProxyResultV2,
+} from "aws-lambda";
 import { evaluateRpn } from "./rpn";
 import * as z from "myzod";
 
@@ -11,12 +16,27 @@ type Output = {
   result: number;
 };
 
+const make400 = (message: string): APIGatewayProxyStructuredResultV2 => {
+  return {
+    statusCode: 400,
+    body: message,
+  };
+};
+
 export const handler: APIGatewayProxyHandlerV2<Output> = async (
   event: APIGatewayProxyEventV2
-): Promise<Output> => {
-  const body: Input = InputSchema.parse(JSON.parse(event.body ?? ""));
+): Promise<APIGatewayProxyResultV2<Output>> => {
+  if (!event.body) {
+    return make400("Missing JSON body");
+  }
 
-  const result = evaluateRpn(body.expression);
+  try {
+    const body: Input = InputSchema.parse(JSON.parse(event.body));
 
-  return { result };
+    const result = evaluateRpn(body.expression);
+    return { result };
+  } catch (err: unknown) {
+    console.log("Error in evaluation", err);
+    return make400("Error in evaluating");
+  }
 };
