@@ -1,45 +1,22 @@
-const evaluateRpn = (tokens: (string | number)[]): number => {
-  const stack: number[] = [];
-  for (const token of tokens) {
-    if (typeof token === "number") {
-      stack.push(token);
-    } else {
-      const op2 = stack.pop();
-      const op1 = stack.pop();
+import { APIGatewayProxyHandlerV2, APIGatewayProxyEventV2 } from "aws-lambda";
+import { evaluateRpn } from "./rpn";
+import * as z from "myzod";
 
-      if (op1 === undefined || op2 === undefined) {
-        throw "Stack underflow";
-      }
+const InputSchema = z.object({
+  expression: z.array(z.string().or(z.number())),
+});
+type Input = z.Infer<typeof InputSchema>;
 
-      switch (token) {
-        case "+":
-          stack.push(op1 + op2);
-          break;
-        case "-":
-          stack.push(op1 - op2);
-          break;
-        default:
-          throw "Unknown operator";
-      }
-    }
-  }
-  return stack[0];
+type Output = {
+  result: number;
 };
 
-// We're reading our command line here so tokenize doesn't take arguments yet
-const tokenize = (): (string | number)[] => {
-  const expression = [...process.argv];
-  // Clear out the program name
-  expression.shift();
-  expression.shift();
-  return expression.map((item) => {
-    const parsed = parseInt(item);
-    return isNaN(parsed) ? item : parsed;
-  });
+export const handler: APIGatewayProxyHandlerV2<Output> = async (
+  event: APIGatewayProxyEventV2
+): Promise<Output> => {
+  const body: Input = InputSchema.parse(JSON.parse(event.body ?? ""));
+
+  const result = evaluateRpn(body.expression);
+
+  return { result };
 };
-
-function main() {
-  console.log(evaluateRpn(tokenize()));
-}
-
-main();
