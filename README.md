@@ -1,3 +1,3 @@
 # microservice-calculator
 
-An experiment in microservices using Node and micro. 
+An experiment in microservices on AWS Lambda, using SQS and Typescript.
