@@ -5,10 +5,11 @@ import {
   APIGatewayProxyResultV2,
 } from "aws-lambda";
 import { evaluateRpn } from "./rpn";
+import { tokenizeRpn } from "./tokenize";
 import * as z from "myzod";
 
 const InputSchema = z.object({
-  expression: z.array(z.string().or(z.number())),
+  expression: z.string(),
 });
 type Input = z.Infer<typeof InputSchema>;
 
@@ -23,7 +24,7 @@ const make400 = (message: string): APIGatewayProxyStructuredResultV2 => {
   };
 };
 
-export const handler: APIGatewayProxyHandlerV2<Output> = async (
+export const entry: APIGatewayProxyHandlerV2<Output> = async (
   event: APIGatewayProxyEventV2
 ): Promise<APIGatewayProxyResultV2<Output>> => {
   if (!event.body) {
@@ -33,7 +34,7 @@ export const handler: APIGatewayProxyHandlerV2<Output> = async (
   try {
     const body: Input = InputSchema.parse(JSON.parse(event.body));
 
-    const result = evaluateRpn(body.expression);
+    const result = evaluateRpn(tokenizeRpn(body.expression));
     return { result };
   } catch (err: unknown) {
     console.log("Error in evaluation", err);
