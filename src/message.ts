@@ -20,3 +20,10 @@ export const sendResultMessage = async (
     })
     .promise();
 };
+
+export const RPNMessageSchema = z.object({
+  id: z.string(),
+  expression: z.string(),
+  tokens: z.array(z.string().or(z.number())),
+});
+export type RPNMessage = z.Infer<typeof RPNMessageSchema>;

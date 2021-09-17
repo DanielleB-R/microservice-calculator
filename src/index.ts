@@ -6,8 +6,13 @@ import {
   SQSHandler,
   SQSEvent,
 } from "aws-lambda";
+import { sqsForeachHandler } from "./handlers";
 import { getDocument, putDocument } from "./dynamo";
-import { ResultMessageSchema, sendResultMessage } from "./message";
+import {
+  ResultMessageSchema,
+  RPNMessageSchema,
+  sendResultMessage,
+} from "./message";
 import { evaluateRpn } from "./rpn";
 import { tokenizeRpn } from "./tokenize";
 import { v4 as uuidv4 } from "uuid";
@@ -67,6 +72,22 @@ export const entry: APIGatewayProxyHandlerV2<Output> = async (
     return make400("Error in evaluating");
   }
 };
+
+export const calculateRpn = sqsForeachHandler(async (record) => {
+  const messageBody = JSON.parse(record.body) as unknown;
+  const message = RPNMessageSchema.try(messageBody);
+  if (message instanceof z.ValidationError) {
+    console.error("Invalid message format", message);
+    return;
+  }
+  const result = evaluateRpn(message.tokens);
+
+  await sendResultMessage({
+    id: message.id,
+    expression: message.expression,
+    result,
+  });
+});
 
 export const storeResult: SQSHandler = async (
   event: SQSEvent
