@@ -12,6 +12,7 @@ import {
   ResultMessageSchema,
   RPNMessageSchema,
   sendResultMessage,
+  sendRPNMessage,
 } from "./message";
 import { evaluateRpn } from "./rpn";
 import { tokenizeRpn } from "./tokenize";
@@ -28,7 +29,7 @@ type Input = z.Infer<typeof InputSchema>;
 type Output = {
   id: string;
   expression: string;
-  result: number;
+  result?: number;
 };
 
 const make400 = (message: string): APIGatewayProxyStructuredResultV2 => {
@@ -50,16 +51,15 @@ export const entry: APIGatewayProxyHandlerV2<Output> = async (
 
     if ("expression" in body) {
       const id = uuidv4();
-      const result = evaluateRpn(tokenizeRpn(body.expression));
 
       const document = {
         id,
         expression: body.expression,
-        result,
+        tokens: tokenizeRpn(body.expression),
       };
-      await sendResultMessage(document);
+      await sendRPNMessage(document);
 
-      return document;
+      return { id, expression: body.expression };
     }
 
     const dynamoDocument = await getDocument(body.id);

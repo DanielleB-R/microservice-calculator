@@ -18,6 +18,9 @@ export const evaluateRpn = (tokens: (string | number)[]): number => {
         case "-":
           stack.push(op1 - op2);
           break;
+        case "*":
+          stack.push(op1 * op2);
+          break;
         default:
           throw "Unknown operator";
       }

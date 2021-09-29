@@ -27,3 +27,12 @@ export const RPNMessageSchema = z.object({
   tokens: z.array(z.string().or(z.number())),
 });
 export type RPNMessage = z.Infer<typeof RPNMessageSchema>;
+
+export const sendRPNMessage = async (message: RPNMessage): Promise<void> => {
+  await sqs
+    .sendMessage({
+      QueueUrl: process.env.RPN_QUEUE_URL ?? "",
+      MessageBody: JSON.stringify(message),
+    })
+    .promise();
+};
