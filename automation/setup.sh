@@ -2,6 +2,9 @@
 
 source ./config.sh
 
+# Create the results queue
+aws sqs create-queue --queue-name=$RESULTS_QUEUE_NAME
+
 # Create the entry point function
 aws lambda create-function \
     --function-name=$ENTRY_LAMBDA_NAME \
