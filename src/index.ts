@@ -14,6 +14,7 @@ import {
   sendResultMessage,
   sendRPNMessage,
 } from "./message";
+import * as cache from "./redis";
 import { evaluateRpn } from "./rpn";
 import { tokenizeRpn } from "./tokenize";
 import { v4 as uuidv4 } from "uuid";
@@ -27,7 +28,7 @@ const InputSchema = z
 type Input = z.Infer<typeof InputSchema>;
 
 type Output = {
-  id: string;
+  id?: string;
   expression: string;
   result?: number;
 };
@@ -50,6 +51,11 @@ export const entry: APIGatewayProxyHandlerV2<Output> = async (
     const body: Input = InputSchema.parse(JSON.parse(event.body));
 
     if ("expression" in body) {
+      const cacheResult = await cache.getResult(body.expression);
+      if (cacheResult !== null) {
+        return { expression: body.expression, result: cacheResult };
+      }
+
       const id = uuidv4();
 
       const document = {
@@ -62,7 +68,9 @@ export const entry: APIGatewayProxyHandlerV2<Output> = async (
       return { id, expression: body.expression };
     }
 
+    console.log(`Getting Dynamo document for id ${body.id}`);
     const dynamoDocument = await getDocument(body.id);
+    console.log(`Received Dynamo document for id ${body.id}`);
     if (!dynamoDocument) {
       return { statusCode: 404 };
     }

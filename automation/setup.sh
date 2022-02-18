@@ -11,7 +11,8 @@ aws lambda create-function \
     --function-name=$ENTRY_LAMBDA_NAME \
     --runtime=nodejs14.x \
     --role=$ENTRY_POINT_ROLE_ARN \
-    --environment="Variables={DYNAMO_TABLE=${DYNAMO_TABLE},RPN_QUEUE_URL=${RPN_QUEUE_URL}}" \
+    --vpc-config SubnetIds=$CACHE_VPC_SUBNET_ID,SecurityGroupIds=$CACHE_VPC_SG_ID \
+    --environment="Variables={DYNAMO_TABLE=${DYNAMO_TABLE},RPN_QUEUE_URL=${RPN_QUEUE_URL},REDIS_ENDPOINT=${REDIS_ENDPOINT}}" \
     --zip-file=fileb://$CODE_BUNDLE_PATH \
     --handler=index.entry
 
