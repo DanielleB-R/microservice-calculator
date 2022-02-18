@@ -1,6 +1,6 @@
 import Redis from "ioredis";
 
-const redis = new Redis();
+const redis = new Redis(6379, process.env.REDIS_ENDPOINT ?? "127.0.0.1");
 
 export async function getResult(expression: string): Promise<number | null> {
   const result = await redis.get(expression);

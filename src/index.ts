@@ -108,6 +108,7 @@ export const storeResult: SQSHandler = async (
         console.error("Invalid message format", message);
         return;
       }
+      await cache.setResult(message.expression, message.result);
       await putDocument(message);
     })
   );

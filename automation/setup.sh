@@ -43,7 +43,8 @@ aws lambda create-function \
     --function-name=$RESULTS_LAMBDA_NAME \
     --runtime=nodejs14.x \
     --role=$RESULTS_ROLE_ARN \
-    --environment="Variables={DYNAMO_TABLE=${DYNAMO_TABLE}}" \
+    --vpc-config SubnetIds=$CACHE_VPC_SUBNET_ID,SecurityGroupIds=$CACHE_VPC_SG_ID \
+    --environment="Variables={DYNAMO_TABLE=${DYNAMO_TABLE},REDIS_ENDPOINT=${REDIS_ENDPOINT}}" \
     --zip-file=fileb://$CODE_BUNDLE_PATH \
     --handler=index.storeResult
 
